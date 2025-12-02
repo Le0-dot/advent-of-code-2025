@@ -1,4 +1,4 @@
-(ns adevent-of-code-2025.day-02 (:gen-class)
+(ns advent-of-code-2025.day-02 (:gen-class)
     (:require
      [clojure.string :refer [split]]))
 

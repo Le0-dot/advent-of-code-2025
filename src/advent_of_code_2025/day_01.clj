@@ -1,4 +1,4 @@
-(ns adevent-of-code-2025.day-01 (:gen-class)
+(ns advent-of-code-2025.day-01 (:gen-class)
     (:require
      [clojure.math :refer [floor-div]]
      [clojure.string :refer [split-lines]]))
