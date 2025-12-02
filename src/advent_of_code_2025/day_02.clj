@@ -9,10 +9,24 @@
        (map #(Long/parseLong %))
        (apply inclusive-range)))
 
+(defn partition-into
+  "Returns a lazy sequence of n lists of elements from coll."
+  [n coll]
+  (partition-all (-> coll count (/ n)) coll))
+
+(defn same? [coll] (apply = coll))
+
+(defn divisible? [a b] (zero? (mod a b)))
+
+; (defn invalid-id? [id]
+;   (->> id str (partition-into 2) same?))
+
 (defn invalid-id? [id]
-  (let [str-id (pr-str id)
-        mid (/ (count str-id) 2)]
-    (= (subs str-id 0 mid) (subs str-id mid))))
+  (let [repr (str id)
+        len (count repr)]
+    (some true?
+          (for [x (inclusive-range 2 len) :when (divisible? len x)]
+            (->> repr (partition-into x) same?)))))
 
 (defn solution [file]
   (->>
