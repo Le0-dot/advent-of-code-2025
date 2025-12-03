@@ -4,17 +4,25 @@
 
 (defn parse-bank [line] (map #(Character/digit % 10) line))
 
-(defn max-pair [coll]
-  (let [mid-max (apply max coll)
-        right-partition (next (drop-while #(not= % mid-max) coll))
-        left-partition (take-while #(not= % mid-max) coll)]
-    (if (seq right-partition)
-      [mid-max (apply max right-partition)]
-      [(apply max left-partition) mid-max])))
+(defn split-on-max [coll]
+  (let [max-value (apply max coll)
+        pred #(not= % max-value)]
+    [(take-while pred coll)
+     max-value
+     (rest (drop-while pred coll))]))
 
-(defn pair-to-number [[a b]] (+ (* 10 a) b))
+(defn max-n [n coll]
+  (cond
+    (zero? n) []
+    (empty? coll) []
+    :else (let [[left value right] (split-on-max coll)
+                on-the-right (max-n (dec n) right)
+                needed (- n 1 (count on-the-right))]
+            (apply conj (max-n needed left) value on-the-right))))
+
+(defn digits-to-number [coll] (reduce #(+ (* 10 %1) %2) coll))
 
 (defn solution [file]
   (->>
    (-> file slurp split-lines)
-   (map parse-bank) (map max-pair) (map pair-to-number) (apply +) println))
+   (map parse-bank) (map #(max-n 12 %)) (map digits-to-number) (apply +) println))
