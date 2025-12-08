@@ -3,6 +3,11 @@
      [clojure.set :refer [difference intersection union]]
      [clojure.string :refer [split-lines]]))
 
+(defrecord State [positions split-count])
+
+(defn init-state [start]
+  (->State {start 1} 0))
+
 (defn diagram-mapping [sym]
   (case sym
     \. nil
@@ -11,19 +16,24 @@
     nil))
 
 (defn parse-line [line]
-  (set
-   (keep-indexed
-    #(when (some? (diagram-mapping %2)) %1)
-    line)))
+  (keep-indexed
+   #(when (some? (diagram-mapping %2)) %1)
+   line))
 
-(defn process-line [state line]
-  (let [splits (intersection state line)
-        new-states (set (mapcat #(vector (dec %) (inc %)) splits))
-        non-splits (difference state splits)]
-    (union new-states non-splits)))
+(defn remove-keys [m ks]
+  (reduce dissoc m ks))
 
-(defn count-splits [history lines]
-  (apply + (map #(count (intersection %1 %2)) history (rest lines))))
+(defn group-state [{positions :positions} splits]
+  [(select-keys positions splits)
+   (remove-keys positions splits)])
+
+(defn split-position [[position timelines]]
+  (hash-map (dec position) timelines (inc position) timelines))
+
+(defn next-state [state splits]
+  (let [[will-split non-splits] (group-state state splits)
+        new-states (map split-position will-split)]
+    (->State (apply merge-with + non-splits new-states) (+ (:split-count state) (count will-split)))))
 
 (defn solution [file]
   (let [diagram (->> file
@@ -31,5 +41,6 @@
                      split-lines
                      (map parse-line))
         start (first (first diagram))
-        history (reductions process-line #{start} (rest diagram))]
-    (println (count-splits history diagram))))
+        final-state (reduce next-state (init-state start) (rest diagram))]
+    ; (println (:split-count final-state))
+    (println (apply + (vals (:positions final-state))))))
