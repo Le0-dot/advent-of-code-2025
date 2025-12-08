@@ -2,10 +2,27 @@
     (:require
      [clojure.string :refer [split split-lines]]))
 
+; (defn parse-number-line [line]
+;   (->> (split line #" ")
+;        (filter seq)
+;        (map #(Integer/parseInt %))))
+
+(defn digit [c]
+  (if (<= (int \0) (int c) (int \9))
+    (- (int c) (int \0))
+    nil))
+
+(defn ditigs-to-number [& digits]
+  (reduce #(+ (* 10 %1) %2) 0 (filter int? digits)))
+
 (defn parse-number-line [line]
-  (->> (split line #" ")
-       (filter seq)
-       (map #(Integer/parseInt %))))
+  (map digit (seq line)))
+
+(defn join-numbers [coll]
+  (->> coll
+       (apply map ditigs-to-number)
+       (partition-by zero?)
+       (filter #(every? pos-int? %))))
 
 (defn parse-op [s]
   (case s
@@ -17,13 +34,13 @@
        (filter seq)
        (map parse-op)))
 
-(defn solve-problem [f & args]
-  (apply f args))
+; (defn solve-problem [f & args]
+;   (apply f args))
 
 (defn solution [file]
   (let [lines (->> file
                    slurp
                    split-lines)
-        numbers (map parse-number-line (butlast lines))
+        numbers (join-numbers (map parse-number-line (butlast lines)))
         ops (parse-op-line (last lines))]
-    (println (apply + (apply map solve-problem ops numbers)))))
+    (println (apply + (map apply ops numbers)))))
