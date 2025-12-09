@@ -3,7 +3,8 @@
      [clojure.data.priority-map :refer [priority-map]]
      [clojure.math :refer [pow]]
      [clojure.string :refer [split split-lines]]
-     [engelberg.data.union-find :refer [components connect union-find]]))
+     [engelberg.data.union-find :refer [connect connected? count-components
+                                        union-find]]))
 
 (defn parse-coordinates [line]
   (map #(Integer/parseInt %) (split line #",")))
@@ -16,10 +17,11 @@
         (for [x coll, y coll :when (not= x y)]
           [[x y] (distance-square x y)])))
 
-(defn join-closest [uf pm n]
-  (if (zero? (dec n))
-    uf
-    (recur (apply connect uf (first (first pm))) (rest pm) (dec n))))
+(defn join-closest [uf pm]
+  (let [[x y] (first (first pm))]
+    (if (and (= 2 (count-components uf)) (not (connected? uf x y)))
+      [x y]
+      (recur (connect uf x y) (rest pm)))))
 
 (defn solution [file]
   (let [coordinates (->> file
@@ -28,10 +30,7 @@
                          (map parse-coordinates))
         pm (distances coordinates)
         uf (apply union-find coordinates)]
-    (->> (join-closest uf pm 2000)
-         components
-         (map count)
-         (sort >)
-         (take 3)
+    (->> (join-closest uf pm)
+         (map first)
          (apply *)
          println)))
