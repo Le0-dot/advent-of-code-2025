@@ -8,20 +8,26 @@
                      (split-at 1))]
     {k v}))
 
-(defn find-paths
-  ([nodes] (find-paths nodes (list "you") 0))
-  ([nodes stack n]
-   (let [top (peek stack)]
-     (cond
-       (empty? stack) n
-       (= top "out") (recur nodes (pop stack) (inc n))
-       :else (recur nodes (apply conj (pop stack) (nodes top)) n)))))
+(defn count-paths
+  ([nodes start end] ((count-paths nodes start end {}) start))
+  ([nodes start end visited]
+   (cond
+     (= start end) (assoc visited end 1)
+     (visited start) visited
+     :else (let [children (nodes start)
+                 visited-children (reduce #(count-paths nodes %2 end %1) visited children)
+                 found-paths (->> children (select-keys visited-children) vals (apply +))]
+             (assoc visited-children start found-paths)))))
 
 (defn solution [file]
-  (->> file
-       slurp
-       split-lines
-       (map parse-line)
-       (apply merge)
-       find-paths
-       println))
+  (let [nodes (->> file
+                   slurp
+                   split-lines
+                   (map parse-line)
+                   (apply merge))]
+    (->> [["svr" "fft"]
+          ["fft" "dac"]
+          ["dac" "out"]]
+         (map #(apply count-paths nodes %))
+         (apply *)
+         println)))
