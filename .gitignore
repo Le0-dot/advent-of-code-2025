@@ -14,3 +14,6 @@ pom.xml.asc
 .hg/
 .lsp/
 .clj-kondo/
+*.egg-info
+build/
+*.pyc
